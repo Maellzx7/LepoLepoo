@@ -1,0 +1,532 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sistema de Estacionamento Rotativo</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            font-family: Arial, sans-serif;
+        }
+        body {
+            background-color: #f5f5f5;
+            padding: 20px;
+            margin: 0;
+        }
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background-color: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            padding: 20px;
+        }
+        h1 {
+            text-align: center;
+            color: #2c3e50;
+            margin-top: 0;
+        }
+        .tabs {
+            display: flex;
+            border-bottom: 1px solid #ddd;
+            margin-bottom: 20px;
+        }
+        .tab {
+            padding: 10px 20px;
+            cursor: pointer;
+            background-color: #f1f1f1;
+            border: 1px solid #ddd;
+            border-bottom: none;
+            border-radius: 5px 5px 0 0;
+            margin-right: 5px;
+        }
+        .tab.active {
+            background-color: #3498db;
+            color: white;
+            border-color: #3498db;
+        }
+        .form-group {
+            margin-bottom: 15px;
+        }
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+        input, select {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 16px;
+        }
+        button {
+            background-color: #3498db;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: background-color 0.3s;
+        }
+        button:hover {
+            background-color: #2980b9;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+        th, td {
+            border: 1px solid #ddd;
+            padding: 10px;
+            text-align: left;
+        }
+        th {
+            background-color: #f2f2f2;
+        }
+        tr:nth-child(even) {
+            background-color: #f9f9f9;
+        }
+        .tab-content {
+            display: none;
+        }
+        .tab-content.active {
+            display: block;
+        }
+        .status-entrada {
+            color: green;
+            font-weight: bold;
+        }
+        .status-saida {
+            color: red;
+            font-weight: bold;
+        }
+        .error {
+            color: red;
+            margin-top: 5px;
+        }
+        .success {
+            color: green;
+            margin-top: 5px;
+        }
+        .valores {
+            background-color: #f8f9fa;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            padding: 15px;
+            margin-top: 20px;
+        }
+        .valores h3 {
+            margin-top: 0;
+            color: #2c3e50;
+        }
+        .valores p {
+            margin: 5px 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Sistema de Estacionamento Rotativo</h1>
+        
+        <div class="tabs">
+            <div class="tab active" onclick="openTab('entrada')">Entrada</div>
+            <div class="tab" onclick="openTab('saida')">Saída</div>
+            <div class="tab" onclick="openTab('relatorio')">Relatório</div>
+        </div>
+        
+        <div id="entrada" class="tab-content active">
+            <h2>Registrar Entrada</h2>
+            <div class="form-group">
+                <label for="placa-entrada">Placa do Veículo:</label>
+                <input type="text" id="placa-entrada" placeholder="ABC-1234" maxlength="8">
+                <div id="placa-entrada-error" class="error"></div>
+            </div>
+            
+            <div class="form-group">
+                <label for="modelo">Modelo do Veículo:</label>
+                <input type="text" id="modelo" placeholder="Ex: Gol, Corolla, HB20">
+            </div>
+            
+            <div class="form-group">
+                <label for="tipo-veiculo">Tipo de Veículo:</label>
+                <select id="tipo-veiculo">
+                    <option value="carro">Carro</option>
+                    <option value="moto">Moto</option>
+                    <option value="caminhonete">Caminhonete</option>
+                </select>
+            </div>
+            
+            <button onclick="registrarEntrada()">Registrar Entrada</button>
+            <div id="mensagem-entrada" class="success"></div>
+        </div>
+        
+        <div id="saida" class="tab-content">
+            <h2>Registrar Saída</h2>
+            <div class="form-group">
+                <label for="placa-saida">Placa do Veículo:</label>
+                <input type="text" id="placa-saida" placeholder="ABC-1234" maxlength="8">
+                <div id="placa-saida-error" class="error"></div>
+            </div>
+            
+            <button onclick="buscarVeiculo()">Buscar Veículo</button>
+            
+            <div id="info-veiculo" class="valores" style="display: none;">
+                <h3>Informações do Veículo</h3>
+                <p><strong>Modelo:</strong> <span id="info-modelo"></span></p>
+                <p><strong>Tipo:</strong> <span id="info-tipo"></span></p>
+                <p><strong>Entrada:</strong> <span id="info-entrada"></span></p>
+                <p><strong>Tempo de Permanência:</strong> <span id="info-tempo"></span></p>
+                <p><strong>Valor a Pagar:</strong> R$ <span id="info-valor"></span></p>
+                
+                <button onclick="registrarSaida()">Confirmar Saída</button>
+            </div>
+            
+            <div id="mensagem-saida" class="success"></div>
+        </div>
+        
+        <div id="relatorio" class="tab-content">
+            <h2>Relatório de Veículos</h2>
+            
+            <div class="form-group">
+                <label for="filtro-status">Filtrar por Status:</label>
+                <select id="filtro-status" onchange="filtrarRelatorio()">
+                    <option value="todos">Todos</option>
+                    <option value="estacionado">Estacionados</option>
+                    <option value="finalizado">Finalizados</option>
+                </select>
+            </div>
+            
+            <table id="tabela-relatorio">
+                <thead>
+                    <tr>
+                        <th>Placa</th>
+                        <th>Modelo</th>
+                        <th>Tipo</th>
+                        <th>Entrada</th>
+                        <th>Saída</th>
+                        <th>Tempo</th>
+                        <th>Valor</th>
+                        <th>Status</th>
+                    </tr>
+                </thead>
+                <tbody id="relatorio-body">
+                    <!-- Os dados serão inseridos dinamicamente aqui -->
+                </tbody>
+            </table>
+            
+            <div class="valores">
+                <h3>Resumo</h3>
+                <p><strong>Total de Veículos:</strong> <span id="total-veiculos">0</span></p>
+                <p><strong>Veículos Estacionados:</strong> <span id="veiculos-estacionados">0</span></p>
+                <p><strong>Faturamento Total:</strong> R$ <span id="faturamento-total">0.00</span></p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Armazenamento de veículos
+        let veiculos = JSON.parse(localStorage.getItem('veiculos')) || [];
+        
+        // Valores por tipo de veículo (R$ por hora)
+        const valorPorHora = {
+            'carro': 5.00,
+            'moto': 3.00,
+            'caminhonete': 7.00
+        };
+        
+        // Função para mudar de tab
+        function openTab(tabName) {
+            // Esconder todas as tabs
+            document.querySelectorAll('.tab-content').forEach(tab => {
+                tab.classList.remove('active');
+            });
+            
+            // Remover classe ativa de todas as abas
+            document.querySelectorAll('.tab').forEach(tab => {
+                tab.classList.remove('active');
+            });
+            
+            // Mostrar a tab selecionada
+            document.getElementById(tabName).classList.add('active');
+            
+            // Adicionar classe ativa na aba selecionada
+            const tabs = document.querySelectorAll('.tab');
+            if (tabName === 'entrada') {
+                tabs[0].classList.add('active');
+            } else if (tabName === 'saida') {
+                tabs[1].classList.add('active');
+            } else if (tabName === 'relatorio') {
+                tabs[2].classList.add('active');
+                atualizarRelatorio();
+            }
+        }
+        
+        // Função para validar placa
+        function validarPlaca(placa) {
+            // Formato: ABC-1234 ou ABC1234
+            const regexPlaca = /^[A-Z]{3}[-]?[0-9]{4}$/;
+            return regexPlaca.test(placa);
+        }
+        
+        // Função para registrar entrada
+        function registrarEntrada() {
+            const placa = document.getElementById('placa-entrada').value.toUpperCase();
+            const modelo = document.getElementById('modelo').value;
+            const tipo = document.getElementById('tipo-veiculo').value;
+            const errorElement = document.getElementById('placa-entrada-error');
+            const mensagemElement = document.getElementById('mensagem-entrada');
+            
+            errorElement.textContent = '';
+            mensagemElement.textContent = '';
+            
+            // Validação da placa
+            if (!placa) {
+                errorElement.textContent = 'Por favor, informe a placa do veículo.';
+                return;
+            }
+            
+            if (!validarPlaca(placa)) {
+                errorElement.textContent = 'Formato de placa inválido. Use o formato ABC-1234 ou ABC1234.';
+                return;
+            }
+            
+            // Verificar se o veículo já está estacionado
+            const veiculoExistente = veiculos.find(v => v.placa === placa && !v.saida);
+            if (veiculoExistente) {
+                errorElement.textContent = 'Este veículo já está registrado no estacionamento.';
+                return;
+            }
+            
+            // Registrar entrada
+            const entrada = new Date();
+            const novoVeiculo = {
+                placa,
+                modelo: modelo || 'Não informado',
+                tipo,
+                entrada,
+                saida: null,
+                tempo: null,
+                valor: null
+            };
+            
+            veiculos.push(novoVeiculo);
+            salvarDados();
+            
+            // Limpar campos
+            document.getElementById('placa-entrada').value = '';
+            document.getElementById('modelo').value = '';
+            
+            // Mostrar mensagem de sucesso
+            mensagemElement.textContent = `Entrada registrada com sucesso! Data/Hora: ${formatarData(entrada)}`;
+            
+            // Atualizar relatório se estiver na tab de relatório
+            if (document.getElementById('relatorio').classList.contains('active')) {
+                atualizarRelatorio();
+            }
+        }
+        
+        // Função para buscar veículo por placa
+        function buscarVeiculo() {
+            const placa = document.getElementById('placa-saida').value.toUpperCase();
+            const errorElement = document.getElementById('placa-saida-error');
+            const infoVeiculo = document.getElementById('info-veiculo');
+            
+            errorElement.textContent = '';
+            infoVeiculo.style.display = 'none';
+            
+            // Validação da placa
+            if (!placa) {
+                errorElement.textContent = 'Por favor, informe a placa do veículo.';
+                return;
+            }
+            
+            if (!validarPlaca(placa)) {
+                errorElement.textContent = 'Formato de placa inválido. Use o formato ABC-1234 ou ABC1234.';
+                return;
+            }
+            
+            // Buscar veículo
+            const veiculo = veiculos.find(v => v.placa === placa && !v.saida);
+            if (!veiculo) {
+                errorElement.textContent = 'Veículo não encontrado ou já saiu do estacionamento.';
+                return;
+            }
+            
+            // Calcular tempo e valor
+            const agora = new Date();
+            const entrada = new Date(veiculo.entrada);
+            const diferencaMs = agora - entrada;
+            const diferencaHoras = diferencaMs / (1000 * 60 * 60);
+            const tempo = calcularTempo(entrada, agora);
+            const valor = calcularValor(veiculo.tipo, diferencaHoras);
+            
+            // Exibir informações
+            document.getElementById('info-modelo').textContent = veiculo.modelo;
+            document.getElementById('info-tipo').textContent = veiculo.tipo;
+            document.getElementById('info-entrada').textContent = formatarData(entrada);
+            document.getElementById('info-tempo').textContent = tempo;
+            document.getElementById('info-valor').textContent = valor.toFixed(2);
+            
+            infoVeiculo.style.display = 'block';
+        }
+        
+        // Função para registrar saída
+        function registrarSaida() {
+            const placa = document.getElementById('placa-saida').value.toUpperCase();
+            const mensagemElement = document.getElementById('mensagem-saida');
+            const infoVeiculo = document.getElementById('info-veiculo');
+            
+            // Buscar veículo
+            const veiculo = veiculos.find(v => v.placa === placa && !v.saida);
+            if (!veiculo) {
+                return;
+            }
+            
+            // Registrar saída
+            const saida = new Date();
+            const entrada = new Date(veiculo.entrada);
+            const diferencaMs = saida - entrada;
+            const diferencaHoras = diferencaMs / (1000 * 60 * 60);
+            
+            veiculo.saida = saida;
+            veiculo.tempo = calcularTempo(entrada, saida);
+            veiculo.valor = calcularValor(veiculo.tipo, diferencaHoras);
+            
+            salvarDados();
+            
+            // Limpar campos e informações
+            document.getElementById('placa-saida').value = '';
+            infoVeiculo.style.display = 'none';
+            
+            // Mostrar mensagem de sucesso
+            mensagemElement.textContent = `Saída registrada com sucesso! Valor cobrado: R$ ${veiculo.valor.toFixed(2)}`;
+            
+            // Atualizar relatório se estiver na tab de relatório
+            if (document.getElementById('relatorio').classList.contains('active')) {
+                atualizarRelatorio();
+            }
+        }
+        
+        // Função para calcular o tempo de permanência
+        function calcularTempo(entrada, saida) {
+            const diferencaMs = saida - entrada;
+            
+            let minutos = Math.floor((diferencaMs / (1000 * 60)) % 60);
+            let horas = Math.floor((diferencaMs / (1000 * 60 * 60)) % 24);
+            let dias = Math.floor(diferencaMs / (1000 * 60 * 60 * 24));
+            
+            let resultado = '';
+            if (dias > 0) {
+                resultado += `${dias} dia${dias > 1 ? 's' : ''} `;
+            }
+            
+            resultado += `${horas}h ${minutos}min`;
+            return resultado;
+        }
+        
+        // Função para calcular o valor a pagar
+        function calcularValor(tipoVeiculo, horas) {
+            const valorHora = valorPorHora[tipoVeiculo] || 5.00;
+            let horasArredondadas = Math.ceil(horas); // Arredonda para cima
+            
+            // Mínimo de 1 hora
+            if (horasArredondadas < 1) {
+                horasArredondadas = 1;
+            }
+            
+            return horasArredondadas * valorHora;
+        }
+        
+        // Função para formatar data
+        function formatarData(data) {
+            const dia = data.getDate().toString().padStart(2, '0');
+            const mes = (data.getMonth() + 1).toString().padStart(2, '0');
+            const ano = data.getFullYear();
+            const hora = data.getHours().toString().padStart(2, '0');
+            const minutos = data.getMinutes().toString().padStart(2, '0');
+            
+            return `${dia}/${mes}/${ano} ${hora}:${minutos}`;
+        }
+        
+        // Função para atualizar o relatório
+        function atualizarRelatorio() {
+            const tbody = document.getElementById('relatorio-body');
+            const filtro = document.getElementById('filtro-status').value;
+            
+            // Limpar tabela
+            tbody.innerHTML = '';
+            
+            // Contadores para o resumo
+            let totalVeiculos = veiculos.length;
+            let veiculosEstacionados = 0;
+            let faturamentoTotal = 0;
+            
+            // Filtrar veículos conforme seleção
+            let veiculosFiltrados = [...veiculos];
+            if (filtro === 'estacionado') {
+                veiculosFiltrados = veiculos.filter(v => !v.saida);
+            } else if (filtro === 'finalizado') {
+                veiculosFiltrados = veiculos.filter(v => v.saida);
+            }
+            
+            // Adicionar veículos à tabela
+            veiculosFiltrados.forEach(veiculo => {
+                const row = document.createElement('tr');
+                
+                // Status do veículo
+                const status = veiculo.saida ? 'Finalizado' : 'Estacionado';
+                const statusClass = veiculo.saida ? 'status-saida' : 'status-entrada';
+                
+                // Atualizar contadores
+                if (!veiculo.saida) {
+                    veiculosEstacionados++;
+                }
+                
+                if (veiculo.valor) {
+                    faturamentoTotal += veiculo.valor;
+                }
+                
+                // Adicionar células à linha
+                row.innerHTML = `
+                    <td>${veiculo.placa}</td>
+                    <td>${veiculo.modelo}</td>
+                    <td>${veiculo.tipo}</td>
+                    <td>${formatarData(new Date(veiculo.entrada))}</td>
+                    <td>${veiculo.saida ? formatarData(new Date(veiculo.saida)) : '-'}</td>
+                    <td>${veiculo.tempo || '-'}</td>
+                    <td>${veiculo.valor ? 'R$ ' + veiculo.valor.toFixed(2) : '-'}</td>
+                    <td class="${statusClass}">${status}</td>
+                `;
+                
+                tbody.appendChild(row);
+            });
+            
+            // Atualizar resumo
+            document.getElementById('total-veiculos').textContent = totalVeiculos;
+            document.getElementById('veiculos-estacionados').textContent = veiculosEstacionados;
+            document.getElementById('faturamento-total').textContent = faturamentoTotal.toFixed(2);
+        }
+        
+        // Função para filtrar relatório
+        function filtrarRelatorio() {
+            atualizarRelatorio();
+        }
+        
+        // Função para salvar dados no localStorage
+        function salvarDados() {
+            localStorage.setItem('veiculos', JSON.stringify(veiculos));
+        }
+        
+        // Inicializar relatório na carga da página
+        document.addEventListener('DOMContentLoaded', function() {
+            if (document.getElementById('relatorio').classList.contains('active')) {
+                atualizarRelatorio();
+            }
+        });
+    </script>
+</body>
+</html>
